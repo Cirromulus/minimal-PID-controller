@@ -34,6 +34,8 @@ class PID
         PID();
 
         /*
+         * setpoint - target value
+         * pv -  actual value
          * Kp -  (default) proportional gain
          * Ki -  Integral gain
          * Kd -  derivative gain
