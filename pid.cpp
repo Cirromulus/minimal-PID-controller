@@ -36,8 +36,9 @@ PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki ) :
     _Ki(Ki),
     _pre_error(0),
     _integral(0)
-{
-}
+{}
+
+PID::PID() : PID(0, 0, 0, 0, 0, 0){}
 
 double PID::calculate( double setpoint, double pv )
 {
