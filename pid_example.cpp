@@ -25,11 +25,13 @@
 
 int main() {
 
-    PID pid = PID(0.1, 100, -100, 0.1, 0.01, 0.5);
+    const PID::Settings set{.Kp = 0.1, .Ki = 0.5, .Kd = 0.01,
+                      .dt = 0.1, .max = 100, .min = -100};
+    PID pid;
 
     double val = 20;
     for (int i = 0; i < 100; i++) {
-        double inc = pid.calculate(0, val);
+        double inc = pid.calculate(0, val, set);
         printf("val:% 7.3f inc:% 7.3f\n", val, inc);
         val += inc;
     }

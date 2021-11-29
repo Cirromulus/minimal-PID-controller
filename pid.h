@@ -26,33 +26,27 @@
 class PID
 {
     public:
-        // Kp -  (default) proportional gain
-        // Ki -  Integral gain
-        // Kd -  derivative gain
-        // dt -  (default) loop interval time
-        // max - maximum value of manipulated variable
-        // min - minimum value of manipulated variable
-        PID( double dt, double max, double min, double Kp, double Kd, double Ki );
-        
+        struct Settings {
+            double Kp; double Ki; double Kd;
+            double dt; double max; double min;
+        };
+
         PID();
 
-
-        // using configured defaults
-        double calculate( double setpoint, double pv );
-
-        /* @param dt loop interval time
-         * @param Kp proportional gain
+        /*
+         * Kp -  (default) proportional gain
+         * Ki -  Integral gain
+         * Kd -  derivative gain
+         * dt -  (default) loop interval time
+         * max - maximum value of manipulated variable
+         * min - minimum value of manipulated variable
          * @return the manipulated variable given a setpoint and current process value
          */
-        double calculate( double setpoint, double pv, double dt, double Kp );
+
+        double calculate( double setpoint, double pv,
+                          const Settings& set );
 
     private:
-        const double _dt;
-        const double _max;
-        const double _min;
-        const double _Kp;
-        const double _Kd;
-        const double _Ki;
         double _pre_error;
         double _integral;
 };
