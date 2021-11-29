@@ -41,7 +41,7 @@ PID::PID( double dt, double max, double min, double Kp, double Kd, double Ki ) :
 
 double PID::calculate( double setpoint, double pv )
 {
-	calculate(setpoint, pv, _dt, _Kp);
+	return calculate(setpoint, pv, _dt, _Kp);
 }
 
 double PID::calculate( double setpoint, double pv, double dt, double Kp )
