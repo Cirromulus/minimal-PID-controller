@@ -26,24 +26,31 @@
 class PID
 {
     public:
-        // Kp -  proportional gain
+        // Kp -  (default) proportional gain
         // Ki -  Integral gain
         // Kd -  derivative gain
-        // dt -  loop interval time
+        // dt -  (default) loop interval time
         // max - maximum value of manipulated variable
         // min - minimum value of manipulated variable
         PID( double dt, double max, double min, double Kp, double Kd, double Ki );
 
-        // Returns the manipulated variable given a setpoint and current process value
+
+        // using configured defaults
         double calculate( double setpoint, double pv );
 
+        /* @param dt loop interval time
+         * @param Kp proportional gain
+         * @return the manipulated variable given a setpoint and current process value
+         */
+        double calculate( double setpoint, double pv, double dt, double Kp );
+
     private:
-        double _dt;
-        double _max;
-        double _min;
-        double _Kp;
-        double _Kd;
-        double _Ki;
+        const double _dt;
+        const double _max;
+        const double _min;
+        const double _Kp;
+        const double _Kd;
+        const double _Ki;
         double _pre_error;
         double _integral;
 };
