@@ -22,11 +22,12 @@
 
 #include "pid.h"
 #include <stdio.h>
+#include <math.h> //for NAN
 
 int main() {
 
     const PID::Settings set{.Kp = 0.1, .Ki = 0.5, .Kd = 0.01,
-                      .dt = 0.1, .max = 100, .min = -100};
+                      .dt = 0.1, .max = 2, .min = NAN};
     PID pid;
 
     double val = 20;

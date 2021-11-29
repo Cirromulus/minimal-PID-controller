@@ -21,7 +21,6 @@
  * THE SOFTWARE.
  */
 
-#include <iostream>
 #include <cmath>
 #include "pid.h"
 
@@ -53,10 +52,11 @@ double PID::calculate( double setpoint, double pv,
     double output = Pout + Iout + Dout;
 
     // Restrict to max/min
-    if( output > set.max )
+    double min = isnan(set.min) ? -set.max : set.min;
+    if( !isnan(set.max) && output > set.max )
         output = set.max;
-    else if( output < set.min )
-        output = set.min;
+    else if( !isnan(min) && output < min )
+        output = min;
 
     // Save error to previous error
     _pre_error = error;
