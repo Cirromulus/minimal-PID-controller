@@ -39,7 +39,7 @@ class PID
          * Kp -  (default) proportional gain
          * Ki -  Integral gain
          * Kd -  derivative gain
-         * dt -  (default) loop interval time
+         * dt -  (default) loop interval time in seconds
          * max - maximum value of manipulated variable
          * min - minimum value of manipulated variable
          * @return the manipulated variable given a setpoint and current process value
