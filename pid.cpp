@@ -41,6 +41,7 @@ double PID::calculate( double setpoint, double pv,
     double Pout = set.Kp * error;
 
     // Integral term
+    const double previous_integral = _integral;
     _integral += error * set.dt;
     double Iout = set.Ki * _integral;
 
@@ -53,10 +54,14 @@ double PID::calculate( double setpoint, double pv,
 
     // Restrict to max/min
     double min = isnan(set.min) ? -set.max : set.min;
-    if( !isnan(set.max) && output > set.max )
+    if( !isnan(set.max) && output > set.max ) {
         output = set.max;
-    else if( !isnan(min) && output < min )
+        _integral = previous_integral;  // cap integral to limit long-term error buildup
+    }
+    else if( !isnan(min) && output < min ) {
         output = min;
+        _integral = previous_integral;  // cap integral to limit long-term error buildup
+    }
 
     // Save error to previous error
     _pre_error = error;
