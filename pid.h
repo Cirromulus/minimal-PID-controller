@@ -29,7 +29,7 @@ class PID
         struct Settings {
             double Kp; double Ki; double Kd;
             double dt; double max; double min;
-            double max_dv;  // acceleration of output
+            double max_dv;
         };
         static Settings getDefault();
 
@@ -44,6 +44,7 @@ class PID
          * dt -  (default) loop interval time in seconds
          * max - maximum value of manipulated variable
          * min - minimum value of manipulated variable
+         * max_dv - maxium acceleration of process value (units/s)
          * @return the manipulated variable given a setpoint and current process value
          */
 
