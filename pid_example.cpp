@@ -27,7 +27,8 @@
 int main() {
 
     const PID::Settings set{.Kp = 0.1, .Ki = 0.5, .Kd = 0.01,
-                      .dt = 0.1, .max = 2, .min = NAN};
+                      .dt = 1 , .max = 2, .min = NAN, .max_dv = 0.5
+    };
     PID pid;
 
     double val = 20;

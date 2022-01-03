@@ -27,9 +27,17 @@
 using namespace std;
 
 PID::PID() :
+    _pre_output(0),
     _pre_error(0),
     _integral(0)
-{}
+{};
+
+PID::Settings PID::getDefault()
+{
+  return PID::Settings {.Kp = 1, .Ki = 0, .Kd = 0,
+                   .dt = 1, .max = NAN, .min = NAN,
+                   .max_dv = NAN};
+}
 
 double PID::calculate( double setpoint, double pv,
                        const Settings& set )
@@ -53,19 +61,38 @@ double PID::calculate( double setpoint, double pv,
     double output = Pout + Iout + Dout;
 
     // Restrict to max/min
+    bool output_was_limited = false;
     double min = isnan(set.min) ? -set.max : set.min;
     if( !isnan(set.max) && output > set.max ) {
         output = set.max;
-        _integral = previous_integral;  // cap integral to limit long-term error buildup
+        output_was_limited = true;
     }
     else if( !isnan(min) && output < min ) {
         output = min;
-        _integral = previous_integral;  // cap integral to limit long-term error buildup
+        output_was_limited = true;
     }
+
+    // Restrict delta value
+    if( !isnan(set.max_dv) ) {
+        double delta_v = (output - _pre_output) / set.dt;
+        if(delta_v > set.max_dv) {
+          output = _pre_output + (set.max_dv / set.dt);
+          output_was_limited = true;
+        }
+        else if (delta_v < -set.max_dv) {
+          output = _pre_output - (set.max_dv / set.dt);
+          output_was_limited = true;
+        }
+    }
+
+    if(output_was_limited)
+      _integral = previous_integral;  // cap integral to limit long-term error buildup
 
     // Save error to previous error
     _pre_error = error;
 
+    // here to suppress erroneous behavior on acceleration change (NAN -> valid)
+    _pre_output = output;
     return output;
 }
 

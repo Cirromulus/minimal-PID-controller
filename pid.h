@@ -29,7 +29,9 @@ class PID
         struct Settings {
             double Kp; double Ki; double Kd;
             double dt; double max; double min;
+            double max_dv;  // acceleration of output
         };
+        static Settings getDefault();
 
         PID();
 
@@ -49,6 +51,7 @@ class PID
                           const Settings& set );
 
     private:
+        double _pre_output;
         double _pre_error;
         double _integral;
 };
