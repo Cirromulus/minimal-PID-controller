@@ -60,8 +60,22 @@ double PID::calculate( double setpoint, double pv,
     // Calculate total output
     double output = Pout + Iout + Dout;
 
-    // Restrict to max/min
     bool output_was_limited = false;
+
+    // Restrict delta value
+    if( !isnan(set.max_dv) ) {
+        double delta_v = (output - _pre_output) / set.dt;
+        if(delta_v > set.max_dv) {
+          output = _pre_output + (set.max_dv * set.dt);
+          output_was_limited = true;
+        }
+        else if (delta_v < -set.max_dv) {
+          output = _pre_output - (set.max_dv * set.dt);
+          output_was_limited = true;
+        }
+    }
+
+    // Restrict to max/min
     double min = isnan(set.min) ? -set.max : set.min;
     if( !isnan(set.max) && output > set.max ) {
         output = set.max;
@@ -70,19 +84,6 @@ double PID::calculate( double setpoint, double pv,
     else if( !isnan(min) && output < min ) {
         output = min;
         output_was_limited = true;
-    }
-
-    // Restrict delta value
-    if( !isnan(set.max_dv) ) {
-        double delta_v = (output - _pre_output) / set.dt;
-        if(delta_v > set.max_dv) {
-          output = _pre_output + (set.max_dv / set.dt);
-          output_was_limited = true;
-        }
-        else if (delta_v < -set.max_dv) {
-          output = _pre_output - (set.max_dv / set.dt);
-          output_was_limited = true;
-        }
     }
 
     if(output_was_limited)
