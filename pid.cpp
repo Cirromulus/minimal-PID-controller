@@ -67,11 +67,9 @@ double PID::calculate( double setpoint, double pv,
         double delta_v = (output - _pre_output) / set.dt;
         if(delta_v > set.max_dv) {
           output = _pre_output + (set.max_dv * set.dt);
-          output_was_limited = true;
         }
         else if (delta_v < -set.max_dv) {
           output = _pre_output - (set.max_dv * set.dt);
-          output_was_limited = true;
         }
     }
 
@@ -86,8 +84,9 @@ double PID::calculate( double setpoint, double pv,
         output_was_limited = true;
     }
 
-    if(output_was_limited)
+    if(output_was_limited && abs(previous_integral) < abs(_integral)) {
       _integral = previous_integral;  // cap integral to limit long-term error buildup
+    }
 
     // Save error to previous error
     _pre_error = error;
