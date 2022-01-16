@@ -67,9 +67,11 @@ double PID::calculate( double setpoint, double pv,
         double delta_v = (output - _pre_output) / set.dt;
         if(delta_v > set.max_dv) {
           output = _pre_output + (set.max_dv * set.dt);
+          output_was_limited = true;
         }
         else if (delta_v < -set.max_dv) {
           output = _pre_output - (set.max_dv * set.dt);
+          output_was_limited = true;
         }
     }
 
