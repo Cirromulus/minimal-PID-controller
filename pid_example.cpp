@@ -22,20 +22,42 @@
 
 #include "pid.h"
 #include <stdio.h>
+#include <iostream>
 #include <math.h> //for NAN
+
+using namespace std;
 
 int main() {
 
-    const PID::Settings set{.Kp = 0.1, .Ki = 0.5, .Kd = 0.01,
-                      .dt = 1 , .max = 2, .min = NAN, .max_dv = 0.5
+    const PID::Settings set{.Kp = .28, .Ki = 1, .Kd = .01,
+      .dt = .1, .max = 600, .min = NAN, .max_dv = 500,
+      .overshoot_integral_adaptation = 1
     };
     PID pid;
 
-    double val = 20;
+    double val = 0;
+    const double target = 3;
+    const double dampening = .6;
+    double opposing_force = 50;
+
+    //simulate stuck wheel
+    for (int i = 0; i < 0; i++) {
+        double inc = pid.calculate(target, val, set);
+        printf("stuck val:% 7.3f inc:% 7.3f\n", val, inc);
+    }
+
+    cerr << "Kp: " << set.Kp << ", Ki: " << set.Ki << ", Kd: " << set.Kd << endl;
+    cerr << "dv: " << set.max_dv << ", Fast integral overshoot adapt.: " << set.overshoot_integral_adaptation << endl;
+    cerr << "Val, Setpoint, Err, P, I, D*10" << endl;
+
     for (int i = 0; i < 100; i++) {
-        double inc = pid.calculate(0, val, set);
+        cerr << val << "," << target << ",";
+        double inc = pid.calculate(target, val, set);
         printf("val:% 7.3f inc:% 7.3f\n", val, inc);
-        val += inc;
+        val = val*dampening + (val + inc - opposing_force)*(1-dampening);
+
+        if(i == 50)
+          opposing_force = 10;
     }
 
     return 0;

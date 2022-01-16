@@ -24,7 +24,16 @@
 #include <cmath>
 #include "pid.h"
 
+#ifdef PID_LOGGING
+#include <iostream>
+#include <iomanip>
+#endif
+
 using namespace std;
+
+template <typename T> int sign(T val) {
+    return (T(0) < val) - (val < T(0));
+}
 
 PID::PID() :
     _pre_output(0),
@@ -36,65 +45,87 @@ PID::Settings PID::getDefault()
 {
   return PID::Settings {.Kp = 1, .Ki = 0, .Kd = 0,
                    .dt = 1, .max = NAN, .min = NAN,
-                   .max_dv = NAN};
+                   .max_dv = NAN, .overshoot_integral_adaptation = NAN};
 }
 
 double PID::calculate( double setpoint, double pv,
                        const Settings& set )
 {
-    // Calculate error
-    double error = setpoint - pv;
+  // Calculate error
+  const double error = setpoint - pv;
 
-    // Proportional term
-    double Pout = set.Kp * error;
+  // Proportional term
+  const double Pout = set.Kp * error;
 
-    // Integral term
-    const double previous_integral = _integral;
-    _integral += error * set.dt;
-    double Iout = set.Ki * _integral;
+  // Integral term
+  const double previous_integral = _integral;
+  _integral += error * set.dt;
+  double Iout = set.Ki * _integral;
 
-    // Derivative term
-    double derivative = (error - _pre_error) / set.dt;
-    double Dout = set.Kd * derivative;
+  // Derivative term
+  const double derivative = (error - _pre_error) / set.dt;
+  const double Dout = set.Kd * derivative;
 
-    // Calculate total output
-    double output = Pout + Iout + Dout;
+  // Calculate total output
+  double output = Pout + Iout + Dout;
 
-    bool output_was_limited = false;
+  if(!isnan(set.overshoot_integral_adaptation)
+        && abs(error) > abs(_pre_error)     // Error getting bigger
+        && sign(derivative) != sign(output) // Output would increase error
+        ){
+#ifdef PID_LOGGING
+      cout << "Overshooting";
+      if (abs(derivative) > set.overshoot_integral_adaptation)
+        cout << " Strongly";
+      cout << endl;
+#endif
 
-    // Restrict delta value
-    if( !isnan(set.max_dv) ) {
-        double delta_v = (output - _pre_output) / set.dt;
-        if(delta_v > set.max_dv) {
-          output = _pre_output + (set.max_dv * set.dt);
-          output_was_limited = true;
-        }
-        else if (delta_v < -set.max_dv) {
-          output = _pre_output - (set.max_dv * set.dt);
-          output_was_limited = true;
-        }
+    _integral += error * set.overshoot_integral_adaptation;   // integral extra offloading
+    Iout = set.Ki * _integral;                               // re-calculate I part
+    output = Pout + Iout + Dout;
+  }
+
+#ifdef PID_LOGGING
+    cerr << setw(12) << error <<
+        "," << setw(12) << Pout << "," << setw(12) << Iout <<
+        "," << setw(12) << 10*Dout << endl;
+#endif
+
+  bool output_was_limited = false;
+
+  // Restrict delta output value
+  if( !isnan(set.max_dv) ) {
+    double delta_v = (output - _pre_output) / set.dt;
+    if(delta_v > set.max_dv) {
+      output = _pre_output + (set.max_dv * set.dt);
+      output_was_limited = true;
     }
-
-    // Restrict to max/min
-    double min = isnan(set.min) ? -set.max : set.min;
-    if( !isnan(set.max) && output > set.max ) {
-        output = set.max;
-        output_was_limited = true;
+    else if (delta_v < -set.max_dv) {
+      output = _pre_output - (set.max_dv * set.dt);
+      output_was_limited = true;
     }
-    else if( !isnan(min) && output < min ) {
-        output = min;
-        output_was_limited = true;
-    }
+  }
 
-    if(output_was_limited && abs(previous_integral) < abs(_integral)) {
-      _integral = previous_integral;  // cap integral to limit long-term error buildup
-    }
+  // Restrict to max/min
+  double min = isnan(set.min) ? -set.max : set.min;
+  if( !isnan(set.max) && output > set.max ) {
+    output = set.max;
+    output_was_limited = true;
+  }
+  else if( !isnan(min) && output < min ) {
+    output = min;
+    output_was_limited = true;
+  }
 
-    // Save error to previous error
-    _pre_error = error;
+  if(output_was_limited && abs(previous_integral) < abs(_integral)) {
+    _integral = previous_integral;  // cap integral to limit long-term error buildup
+  }
 
-    // here to suppress erroneous behavior on acceleration change (NAN -> valid)
-    _pre_output = output;
-    return output;
+  // Save error to previous error
+  _pre_error = error;
+
+  // here to suppress erroneous behavior on acceleration change (NAN -> valid)
+  _pre_output = output;
+  return output;
 }
 

@@ -29,7 +29,7 @@ class PID
         struct Settings {
             double Kp; double Ki; double Kd;
             double dt; double max; double min;
-            double max_dv;
+            double max_dv; double overshoot_integral_adaptation;
         };
         static Settings getDefault();
 
